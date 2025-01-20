@@ -345,6 +345,9 @@
     echo "WINE: -CUSTOM- Fix wine bug #56653 - GetLogicalProcessorInformation can be missing Cache information"
     patch -Np1 < ../patches/wine-hotfixes/pending/wine-bug-56653.patch
 
+    echo "WINE: -CUSTOM- Fix angle conversions for FFB direction/phase"
+    patch -Np1 < ../patches/wine-hotfixes/pending/winebus.sys_fix_ffb_angle_conv.patch
+
     popd
 
 ### END PROTON-GE ADDITIONAL CUSTOM PATCHES ###
