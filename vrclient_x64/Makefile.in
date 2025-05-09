@@ -1,10 +1,13 @@
 MODULE     = vrclient.dll
 UNIXLIB    = vrclient.so
-MODULE_x64 = vrclient_x64.dll
-UNIXLIB_x64= vrclient_x64.so
 IMPORTS    = advapi32
 
-EXTRADEFS = -DWINE_NO_LONG_TYPES -DGNUC
+x86_64_MODULE   = vrclient_x64.dll
+x86_64_UNIXLIB  = vrclient_x64.so
+aarch64_MODULE  = vrclient_x64.dll
+aarch64_UNIXLIB = vrclient_x64.so
+
+EXTRADEFS = -DGNUC
 
 SOURCES = \
 	flatapi.c \

@@ -93,6 +93,42 @@ static bool env_nonzero(const char *env)
     return v != NULL && *v && v[0] != '0';
 }
 
+static bool convert_path_to_win(std::string &s)
+{
+    WCHAR *path = wine_get_dos_file_name(s.c_str());
+    if(!path)
+        return false;
+
+    DWORD sz = WideCharToMultiByte(CP_UTF8, 0, path, -1, NULL, 0, NULL, NULL);
+    if(!sz)
+    {
+        HeapFree(GetProcessHeap(), 0, path);
+        return false;
+    }
+
+    char *pathUTF8 = (char *)HeapAlloc(GetProcessHeap(), 0, sz);
+    if(!pathUTF8)
+    {
+        HeapFree(GetProcessHeap(), 0, path);
+        return false;
+    }
+
+    sz = WideCharToMultiByte(CP_UTF8, 0, path, -1, pathUTF8, sz, NULL, NULL);
+    if(!sz)
+    {
+        HeapFree(GetProcessHeap(), 0, pathUTF8);
+        HeapFree(GetProcessHeap(), 0, path);
+        return false;
+    }
+
+    s = pathUTF8;
+
+    HeapFree(GetProcessHeap(), 0, pathUTF8);
+    HeapFree(GetProcessHeap(), 0, path);
+
+    return true;
+}
+
 static void set_active_process_pid(void)
 {
     DWORD pid = GetCurrentProcessId();
@@ -227,6 +263,21 @@ static void copy_to_win(const char *unix_path, const WCHAR *win_path)
     HeapFree(GetProcessHeap(), 0, src_path);
 }
 
+static void set_env_from_unix(const WCHAR *name, const std::string &val)
+{
+    WCHAR valW[MAX_PATH];
+    DWORD sz;
+
+    sz = MultiByteToWideChar(CP_UTF8, 0, val.c_str(), -1, valW, MAX_PATH);
+    if(!sz)
+    {
+        WINE_WARN("Invalid utf8 seq in vr runtime key\n");
+        return;
+    }
+
+    SetEnvironmentVariableW(name, valW);
+}
+
 /* requires steam API to be initialized */
 static void setup_battleye_bridge(void)
 {
@@ -277,6 +328,36 @@ static void setup_proton_voice_files(void)
     WINE_TRACE("Found proton voice files at %s\n", path);
 
     setenv("PROTON_VOICE_FILES", path, 1);
+}
+
+static void setup_proton_soundfonts(void)
+{
+    static const WCHAR PROTON_SOUNDFILES_FILES_W[] = {'P','R','O','T','O','N','_','S','O','U','N','D','F','O','N','T','_','F','I','L','E','S',0};
+    const unsigned int eac_runtime_appid = 3368180;
+    char unix_path[2048];
+    std::string dos_path;
+    char *path_end;
+    LSTATUS status;
+    HKEY gm_key;
+
+    if (!SteamApps()->BIsAppInstalled(eac_runtime_appid))
+        return;
+
+    if (!SteamApps()->GetAppInstallDir(eac_runtime_appid, unix_path, sizeof(unix_path)))
+        return;
+
+    WINE_TRACE("Found Proton Soundfont at %s\n", unix_path);
+
+    dos_path = std::string{unix_path};
+    if (!convert_path_to_win(dos_path))
+    {
+        WINE_ERR("Couldn't convert soundfonts path to win.\n");
+        return;
+    }
+    dos_path += "\\FluidR3_GM.sf2";
+    WINE_TRACE("GM file path %s\n", wine_dbgstr_a(dos_path.c_str()));
+
+    set_env_from_unix(PROTON_SOUNDFILES_FILES_W, dos_path);
 }
 
 static std::string get_linux_vr_path(void)
@@ -409,42 +490,6 @@ static bool write_string_to_file(const WCHAR *filename, const std::string &conte
     return true;
 }
 
-static bool convert_path_to_win(std::string &s)
-{
-    WCHAR *path = wine_get_dos_file_name(s.c_str());
-    if(!path)
-        return false;
-
-    DWORD sz = WideCharToMultiByte(CP_UTF8, 0, path, -1, NULL, 0, NULL, NULL);
-    if(!sz)
-    {
-        HeapFree(GetProcessHeap(), 0, path);
-        return false;
-    }
-
-    char *pathUTF8 = (char *)HeapAlloc(GetProcessHeap(), 0, sz);
-    if(!pathUTF8)
-    {
-        HeapFree(GetProcessHeap(), 0, path);
-        return false;
-    }
-
-    sz = WideCharToMultiByte(CP_UTF8, 0, path, -1, pathUTF8, sz, NULL, NULL);
-    if(!sz)
-    {
-        HeapFree(GetProcessHeap(), 0, pathUTF8);
-        HeapFree(GetProcessHeap(), 0, path);
-        return false;
-    }
-
-    s = pathUTF8;
-
-    HeapFree(GetProcessHeap(), 0, pathUTF8);
-    HeapFree(GetProcessHeap(), 0, path);
-
-    return true;
-}
-
 static void convert_json_array_paths(Json::Value &arr)
 {
     for(uint32_t i = 0; i < arr.size(); ++i)
@@ -470,21 +515,6 @@ static void convert_environment_path(const char *nameA, const WCHAR *nameW)
     SetEnvironmentVariableW(nameW, path);
 
     HeapFree(GetProcessHeap(), 0, path);
-}
-
-static void set_env_from_unix(const WCHAR *name, const std::string &val)
-{
-    WCHAR valW[MAX_PATH];
-    DWORD sz;
-
-    sz = MultiByteToWideChar(CP_UTF8, 0, val.c_str(), -1, valW, MAX_PATH);
-    if(!sz)
-    {
-        WINE_WARN("Invalid utf8 seq in vr runtime key\n");
-        return;
-    }
-
-    SetEnvironmentVariableW(name, valW);
 }
 
 static bool convert_linux_vrpaths(void)
@@ -1747,6 +1777,7 @@ int main(int argc, char *argv[])
             setup_battleye_bridge();
             setup_eac_bridge();
             setup_proton_voice_files();
+            setup_proton_soundfonts();
         }
         else
         {

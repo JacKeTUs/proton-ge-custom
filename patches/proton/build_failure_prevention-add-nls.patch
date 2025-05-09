@@ -1,0 +1,22 @@
+From 64889703731ec38833154c4b2b882b1fce69f3b8 Mon Sep 17 00:00:00 2001
+From: William Horvath <william@horvath.blog>
+Date: Sat, 3 May 2025 04:12:53 -0700
+Subject: [PATCH] makedep: Add the nls subdir to __tooldeps__
+
+---
+ tools/makedep.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/tools/makedep.c b/tools/makedep.c
+index 4c9333e401b..6fbd5bc86d0 100644
+--- a/tools/makedep.c
++++ b/tools/makedep.c
+@@ -3833,6 +3833,8 @@ static void output_subdirs( struct makefile *make )
+         strarray_addall_path( &all_targets, submakes[i]->obj_dir, submakes[i]->font_files );
+         if (!strcmp( submakes[i]->obj_dir, "tools" ) || !strncmp( submakes[i]->obj_dir, "tools/", 6 ))
+             strarray_add( &tooldeps_deps, obj_dir_path( submakes[i], "all" ));
++        if (!strcmp( submakes[i]->obj_dir, "nls" ) || !strncmp( submakes[i]->obj_dir, "nls/", 4 ))
++            strarray_add( &tooldeps_deps, obj_dir_path( submakes[i], "all" ));
+         if (submakes[i]->testdll)
+             strarray_add( &buildtest_deps, obj_dir_path( submakes[i], "all" ));
+         for (j = 0; j < NB_INSTALL_RULES; j++)

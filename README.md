@@ -2,17 +2,14 @@
 
 # proton-ge-custom
 
-## (1) RUNNING NON-STEAM GAMES WITH PROTON OUTSIDE OF STEAM IS NOT SUPPORTED. DO NOT ASK FOR HELP WITH THIS:
+## (1) RUNNING NON-STEAM GAMES WITH GE-PROTON OUTSIDE OF STEAM IS ONLY SUPPORTED USING [UMU](https://github.com/Open-Wine-Components/umu-launcher):
 
-Proton runs in a container, which uses a runtime environment and libraries specifically built for use within that container. Not running it as intended results in the container and therefore its runtime not being used, and severely breaks library compatibility.
+Proton runs in a container, which uses a runtime environment and libraries specifically built for use within that container. Not running it as intended results in the container and therefore its runtime not being used, and severely breaks library compatibility. It causes wine to search for libraries on your system instead of those it was built with/intended for within proton. It may work, if enough libraries match, but it is not correct and not supportable due to library differences across distros.
 
-It causes wine to search for libraries on your system instead of those it was built with/intended for within proton.
+If you want proton functionality -outside- of proton for non-steam games, umu-launcher is a cli tool that was designed to be able to mimic steam in running the entire containerized runtime environment it needs in order to run proton exactly as steam does without needing steam. Any other method is not supported. 
 
-It may work, if enough libraries match, but it is not correct and not supportable due to library differences across distros.
-
-If you want proton functionality -outside- of proton for non-steam games, I provide Wine-GE for usage with Lutris, found here:
-
-https://github.com/gloriouseggroll/wine-ge-custom
+[Lutris](https://lutris.net/) has already integrated UMU as the default backend used when `GE-Proton(Latest)` is selected as a wine runner either globally or for any specific game.  
+[Heroic](https://heroicgameslauncher.com/) have added it as a toggle option `Use UMU as Proton runtime` under Settings > Advanced.  
 
 ## (2) If you have an issue that happens with my proton-GE build, provided FROM this repository, that does -not- happen on Valve's proton, please DO NOT open a bug report on Valve's bug tracker. Instead, contact me on Discord about the issue:
 
@@ -108,9 +105,9 @@ After every install you need to restart Steam, and [enable proton-ge-custom](#en
 This section is for those that use the native version of Steam.
 
 1. Download a release from the [Releases](https://github.com/GloriousEggroll/proton-ge-custom/releases) page.
-2. Create a `~/.steam/root/compatibilitytools.d` directory if it does not exist.
-3. Extract the release tarball into `~/.steam/root/compatibilitytools.d/`.
-   * `tar -xf GE-ProtonVERSION.tar.gz -C ~/.steam/root/compatibilitytools.d/`
+2. Create a `~/.steam/steam/compatibilitytools.d` directory if it does not exist.
+3. Extract the release tarball into `~/.steam/steam/compatibilitytools.d/`.
+   * `tar -xf GE-ProtonVERSION.tar.gz -C ~/.steam/steam/compatibilitytools.d/`
 4. Restart Steam.
 5. [Enable proton-ge-custom](#enabling).
   
@@ -144,11 +141,11 @@ sha512sum -c $checksum_name
 
 # make steam directory if it does not exist
 echo "Creating Steam directory if it does not exist..."
-mkdir -p ~/.steam/root/compatibilitytools.d
+mkdir -p ~/.steam/steam/compatibilitytools.d
 
 # extract proton tarball to steam directory
 echo "Extracting $tarball_name to Steam directory..."
-tar -xf $tarball_name -C ~/.steam/root/compatibilitytools.d/
+tar -xf $tarball_name -C ~/.steam/steam/compatibilitytools.d/
 echo "All done :)"
 ```
 
@@ -185,7 +182,45 @@ This section is for those that use the Steam flatpak.
 3. Extract the release tarball into `~/.var/app/com.valvesoftware.Steam/data/Steam/compatibilitytools.d/`.
    * `tar -xf GE-ProtonVERSION.tar.gz -C ~/.var/app/com.valvesoftware.Steam/data/Steam/compatibilitytools.d/`
 4. Restart Steam.
-5. [Enable proton-ge-custom](#enabling).
+5. [Enable proton-ge-custom](#enabling).   
+
+    
+*Terminal example based on Latest Release*
+```bash
+# make temp working directory
+echo "Creating temporary working directory..."
+rm -rf /tmp/proton-ge-custom
+mkdir /tmp/proton-ge-custom
+cd /tmp/proton-ge-custom
+
+# download tarball
+echo "Fetching tarball URL..."
+tarball_url=$(curl -s https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases/latest | grep browser_download_url | cut -d\" -f4 | grep .tar.gz)
+tarball_name=$(basename $tarball_url)
+echo "Downloading tarball: $tarball_name..."
+curl -# -L $tarball_url -o $tarball_name --no-progress-meter
+
+# download checksum
+echo "Fetching checksum URL..."
+checksum_url=$(curl -s https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases/latest | grep browser_download_url | cut -d\" -f4 | grep .sha512sum)
+checksum_name=$(basename $checksum_url)
+echo "Downloading checksum: $checksum_name..."
+curl -# -L $checksum_url -o $checksum_name --no-progress-meter
+
+# check tarball with checksum
+echo "Verifying tarball $tarball_name with checksum $checksum_name..."
+sha512sum -c $checksum_name
+# if result is ok, continue
+
+# make steam directory if it does not exist
+echo "Creating Steam directory if it does not exist..."
+mkdir -p ~/.var/app/com.valvesoftware.Steam/data/Steam/compatibilitytools.d
+
+# extract proton tarball to steam directory
+echo "Extracting $tarball_name to Steam directory..."
+tar -xf $tarball_name -C ~/.var/app/com.valvesoftware.Steam/data/Steam/compatibilitytools.d/
+echo "All done :)"
+```
 
 #### Snap
 
@@ -227,11 +262,11 @@ grep -i error patchlog.txt
 
 4. Navigate to the parent directory containing the proton-ge-custom folder.
 
-5. Type the following (note: if using docker instead of podman, change to --container-engine=docker):
+5. Type the following:
 
 ```sh
 mkdir build && cd build
-../configure.sh --enable-ccache --build-name=SOME-BUILD-NAME-HERE --container-engine=podman
+../configure.sh --build-name=SOME-BUILD-NAME-HERE
 make redist &> log
 ```
 
@@ -266,7 +301,7 @@ Environment variable options:
 | <tt>noforcelgadd</tt> |                                | Disable forcelgadd. If both this and `forcelgadd` are set, enabled wins. |
 | <tt>oldglstr</tt>     | <tt>PROTON_OLD_GL_STRING</tt>  | Set some driver overrides to limit the length of the GL extension string, for old games that crash on very long extension strings. |
 | <tt>cmdlineappend:</tt>|                               | Append the string after the colon as an argument to the game command. May be specified more than once. Escape commas and backslashes with a backslash. |
-| <tt>xalia</tt>               | </tt>PROTON_USE_XALIA</tt>                 | Enable Xalia, a program that can add a gamepad UI for some keyboard/mouse interfaces. |
+| <tt>xalia</tt>               | <tt>PROTON_USE_XALIA</tt>                 | Enable Xalia, a program that can add a gamepad UI for some keyboard/mouse interfaces. |
 | <tt>seccomp</tt>      | <tt>PROTON_USE_SECCOMP</tt>    | Enable seccomp-bpf filter to emulate native syscalls, required for some DRM protections to work. |
 | <tt>nowritewatch</tt> | <tt>PROTON_NO_WRITE_WATCH</tt> | Disable support for memory write watches in ntdll. This is a very dangerous hack and should only be applied if you have verified that the game can operate without write watches. This improves performance for some very specific games (e.g. CoreRT-based games). |
 |                       | <tt>WINE_FULLSCREEN_FSR</tt>   | Enable AMD FidelityFX Super Resolution (FSR) 1, use in conjunction with `WINE_FULLSCREEN_FSR_STRENGTH`. Only works in Vulkan games (DXVK and VKD3D-Proton included). |

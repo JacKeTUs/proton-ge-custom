@@ -3,7 +3,11 @@
 #pragma once
 
 #include <d3d12.h>
+#ifdef __WINESRC__
+#include "wine/vulkan.h"
+#else
 #include <vulkan/vulkan.h>
+#endif
 
 #ifndef __ID3D12DeviceExt1_FWD_DEFINED__
 #define __ID3D12DeviceExt1_FWD_DEFINED__

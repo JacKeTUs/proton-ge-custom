@@ -87,3 +87,7 @@
 	path = piper
 	url = https://github.com/shaunren/piper.git
 	branch = library
+[submodule "libxkbcommon"]
+        path = libxkbcommon
+        url = https://github.com/xkbcommon/libxkbcommon.git
+        branch = libxkbcommon-1.7.0

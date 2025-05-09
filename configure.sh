@@ -64,6 +64,9 @@ check_container_engine() {
     if [[ $inner_uid == *"Permission denied"* ]]; then
         err "The container cannot access files. Are you using SELinux?"
         die "Please read README.md and check your $1 setup works."
+    elif [[ $inner_uid == *"Emulate Docker CLI"* ]]; then
+        err "Detected podman-docker in use without the warning being silenced."
+        die "Please create /etc/containers/nodocker or specify --container-engine=podman."
     elif [ "$inner_uid" -eq 0 ]; then
         # namespace maps the user as root or the build is performed as host's root
         ROOTLESS_CONTAINER=1
@@ -116,6 +119,7 @@ function configure() {
   else
     build_name="$DEFAULT_BUILD_NAME" info "No build name specified, using default: $build_name"
   fi
+
   if [[ ${build_name,,} == *proton* ]]; then
     internal_tool_name=${build_name}
   else
@@ -172,9 +176,7 @@ function configure() {
     if [[ -n "$CONTAINER_MOUNT_OPTS" ]]; then
       echo "CONTAINER_MOUNT_OPTS := $CONTAINER_MOUNT_OPTS"
     fi
-    if [[ -n "$arg_enable_ccache" ]]; then
-      echo "ENABLE_CCACHE := 1"
-    fi
+    echo "ENABLE_CCACHE := 1"
     if [[ -n "$arg_enable_bear" ]]; then
       echo "ENABLE_BEAR := 1"
     fi
@@ -197,7 +199,6 @@ arg_build_name=""
 arg_container_engine=""
 arg_docker_opts=""
 arg_relabel_volumes=""
-arg_enable_ccache=""
 arg_enable_bear=""
 arg_help=""
 invalid_args=""
@@ -243,8 +244,6 @@ function parse_args() {
       val_used=1
     elif [[ $arg = --relabel-volumes ]]; then
       arg_relabel_volumes="1"
-    elif [[ $arg = --enable-ccache ]]; then
-      arg_enable_ccache="1"
     elif [[ $arg = --enable-bear ]]; then
       arg_enable_bear="1"
     elif [[ $arg = --proton-sdk-image ]]; then
@@ -299,8 +298,6 @@ usage() {
   "$1" "    --docker-opts='<options>' Extra options to pass to Docker when invoking the runtime."
   "$1" ""
   "$1" "    --relabel-volumes Bind-mounted volumes will be relabeled. Use with caution."
-  "$1" ""
-  "$1" "    --enable-ccache Mount \$CCACHE_DIR or \$HOME/.ccache inside of the container and use ccache for the build."
   "$1" ""
   "$1" "    --enable-bear Invokes make via bear creating compile_commands.json."
   "$1" ""
