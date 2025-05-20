@@ -1,0 +1,24 @@
+From b8fa01b40a7aee96511b11da42c94111bc5672e3 Mon Sep 17 00:00:00 2001
+From: Etaash Mathamsetty <etaash.mathamsetty@gmail.com>
+Date: Wed, 29 Jan 2025 19:05:17 -0500
+Subject: [PATCH 35/44] twinapi.appcore/tests: Fix broken registry query.
+
+---
+ dlls/twinapi.appcore/tests/twinapi.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/dlls/twinapi.appcore/tests/twinapi.c b/dlls/twinapi.appcore/tests/twinapi.c
+index 5ee5c45fc91..e86281b895e 100644
+--- a/dlls/twinapi.appcore/tests/twinapi.c
++++ b/dlls/twinapi.appcore/tests/twinapi.c
+@@ -164,6 +164,7 @@ static void test_AnalyticsVersionInfo(void)
+     WindowsDeleteString( str );
+     WindowsDeleteString( expect_str );
+ 
++    size = sizeof(revision);
+     if (RegGetValueW( HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion", L"UBR",
+                       RRF_RT_REG_DWORD, NULL, &revision, &size ))
+         revision = 0;
+-- 
+2.49.0
+

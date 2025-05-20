@@ -1,7 +1,7 @@
-From d18f77996b7dd235c12f70493582f47c7e77887a Mon Sep 17 00:00:00 2001
+From b8a332dd3b137733f8b528b2c8a791a2a4952fd8 Mon Sep 17 00:00:00 2001
 From: Etaash Mathamsetty <etaash.mathamsetty@gmail.com>
 Date: Sun, 13 Apr 2025 21:21:17 -0400
-Subject: [PATCH] winewayland: Implement relative motion accumulator.
+Subject: [PATCH 23/44] winewayland: Implement relative motion accumulator.
 
 ---
  dlls/winewayland.drv/wayland_pointer.c | 43 ++++++++++++++++++++------
@@ -89,7 +89,7 @@ index 6c852292c1d..b2af6c0db4a 100644
              zwp_relative_pointer_manager_v1_get_relative_pointer(
                  process_wayland.zwp_relative_pointer_manager_v1,
 diff --git a/dlls/winewayland.drv/waylanddrv.h b/dlls/winewayland.drv/waylanddrv.h
-index 50d5fc44079..30fc65d949a 100644
+index 1ccadcb7647..3c42272ccde 100644
 --- a/dlls/winewayland.drv/waylanddrv.h
 +++ b/dlls/winewayland.drv/waylanddrv.h
 @@ -112,6 +112,8 @@ struct wayland_pointer
@@ -102,5 +102,5 @@ index 50d5fc44079..30fc65d949a 100644
  };
  
 -- 
-GitLab
+2.49.0
 

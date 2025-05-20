@@ -1,0 +1,141 @@
+From 1c2f561d80d20fa770c5fd170b9100c94293792d Mon Sep 17 00:00:00 2001
+From: Etaash Mathamsetty
+ <45927311+Etaash-mathamsetty@users.noreply.github.com>
+Date: Mon, 19 May 2025 20:33:06 -0400
+Subject: [PATCH] winebus: Fix PROTON_ENABLE/DISABLE_HIDRAW.
+
+---
+ dlls/winebus.sys/main.c    | 37 ++++++-------------------------------
+ dlls/winebus.sys/unixlib.c | 22 ++++++++++++++++++++++
+ dlls/winebus.sys/unixlib.h |  9 +++++++++
+ 3 files changed, 37 insertions(+), 31 deletions(-)
+
+diff --git a/dlls/winebus.sys/main.c b/dlls/winebus.sys/main.c
+index 858c89d7d5a..09e24514254 100644
+--- a/dlls/winebus.sys/main.c
++++ b/dlls/winebus.sys/main.c
+@@ -433,31 +433,14 @@ static DWORD check_bus_option(const WCHAR *option, DWORD default_value)
+     return default_value;
+ }
+ 
+-static const WCHAR *wcscasestr(const WCHAR *search, const WCHAR *needle)
+-{
+-    UNICODE_STRING search_str, needle_str;
+-
+-    RtlInitUnicodeString(&search_str, search);
+-    RtlInitUnicodeString(&needle_str, needle);
+-
+-    while (needle_str.Length <= search_str.Length)
+-    {
+-        if (!RtlCompareUnicodeString(&search_str, &needle_str, TRUE)) return search_str.Buffer;
+-        search_str.Length -= sizeof(WCHAR);
+-        search_str.Buffer += 1;
+-    }
+-
+-    return NULL;
+-}
+-
+ static BOOL is_hidraw_enabled(WORD vid, WORD pid, const USAGE_AND_PAGE *usages, UINT buttons)
+ {
++    struct hidraw_enabled_params params;
+     char buffer[FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[1024])];
+     KEY_VALUE_PARTIAL_INFORMATION *info = (KEY_VALUE_PARTIAL_INFORMATION *)buffer;
+-    WCHAR vidpid[MAX_PATH], *tmp, value[1024];
++    WCHAR vidpid[MAX_PATH], *tmp;
+     BOOL prefer_hidraw = FALSE;
+     UNICODE_STRING str;
+-    SIZE_T len;
+     DWORD size;
+ 
+     if (check_bus_option(L"DisableHidraw", FALSE)) return FALSE;
+@@ -468,19 +451,11 @@ static BOOL is_hidraw_enabled(WORD vid, WORD pid, const USAGE_AND_PAGE *usages,
+         return FALSE;
+     }
+ 
+-    if (!RtlQueryEnvironmentVariable(NULL, L"PROTON_DISABLE_HIDRAW", 20, value, ARRAY_SIZE(value) - 1, &len))
+-    {
+-        value[len] = 0;
+-        if (!wcscmp(value, L"1")) return FALSE;
+-        swprintf(vidpid, ARRAY_SIZE(vidpid), L"0x%04X/0x%04X", vid, pid);
+-        if (wcscasestr(value, vidpid)) return FALSE;
+-    }
+-    if (!RtlQueryEnvironmentVariable(NULL, L"PROTON_ENABLE_HIDRAW", 20, value, ARRAY_SIZE(value) - 1, &len))
++    params.vid = vid;
++    params.pid = pid;
++    if (!winebus_call(hidraw_enabled, &params) && params.env_set)
+     {
+-        value[len] = 0;
+-        if (!wcscmp(value, L"1")) return TRUE;
+-        swprintf(vidpid, ARRAY_SIZE(vidpid), L"0x%04X/0x%04X", vid, pid);
+-        if (wcscasestr(value, vidpid)) return TRUE;
++        return params.enabled;
+     }
+ 
+     if (usages->UsagePage == HID_USAGE_PAGE_DIGITIZER)
+diff --git a/dlls/winebus.sys/unixlib.c b/dlls/winebus.sys/unixlib.c
+index bd4351f059c..da5d4502f45 100644
+--- a/dlls/winebus.sys/unixlib.c
++++ b/dlls/winebus.sys/unixlib.c
+@@ -300,6 +300,27 @@ static NTSTATUS unix_device_set_feature_report(void *args)
+     return STATUS_SUCCESS;
+ }
+ 
++static NTSTATUS unix_hidraw_enabled(void *args)
++{
++    char *value;
++    char vidpid[MAX_PATH] = {0};
++    struct hidraw_enabled_params *params = args;
++
++    if ((value = getenv("PROTON_DISABLE_HIDRAW")))
++    {
++        if (!strcmp(value, "1")) { params->enabled = FALSE; params->env_set = TRUE; }
++        snprintf(vidpid, ARRAY_SIZE(vidpid), "0x%04X/0x%04X", params->vid, params->pid);
++        if (strcasestr(value, vidpid)) { params->enabled = FALSE; params->env_set = TRUE; }
++    } else if ((value = getenv("PROTON_ENABLE_HIDRAW")))
++    {
++        if (!strcmp(value, "1")) { params->enabled = TRUE; params->env_set = TRUE; }
++        snprintf(vidpid, ARRAY_SIZE(vidpid), "0x%04X/0x%04X", params->vid, params->pid);
++        if (strcasestr(value, vidpid)) { params->enabled = TRUE; params->env_set = TRUE; }
++    }
++
++    return STATUS_SUCCESS;
++}
++
+ const unixlib_entry_t __wine_unix_call_funcs[] =
+ {
+     sdl_bus_init,
+@@ -319,6 +340,7 @@ const unixlib_entry_t __wine_unix_call_funcs[] =
+     unix_device_set_output_report,
+     unix_device_get_feature_report,
+     unix_device_set_feature_report,
++    unix_hidraw_enabled
+ };
+ 
+ C_ASSERT(ARRAYSIZE(__wine_unix_call_funcs) == unix_funcs_count);
+diff --git a/dlls/winebus.sys/unixlib.h b/dlls/winebus.sys/unixlib.h
+index 02e7a1c6953..2b97512106e 100644
+--- a/dlls/winebus.sys/unixlib.h
++++ b/dlls/winebus.sys/unixlib.h
+@@ -125,6 +125,14 @@ struct device_report_params
+     IO_STATUS_BLOCK *io;
+ };
+ 
++struct hidraw_enabled_params
++{
++    unsigned short vid;
++    unsigned short pid;
++    BOOL env_set;
++    BOOL enabled;
++};
++
+ enum unix_funcs
+ {
+     sdl_init,
+@@ -144,6 +152,7 @@ enum unix_funcs
+     device_set_output_report,
+     device_get_feature_report,
+     device_set_feature_report,
++    hidraw_enabled,
+     unix_funcs_count,
+ };
+ 

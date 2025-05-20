@@ -1,0 +1,26 @@
+From b6449212905d46d2890c0df6f2a3408366c81650 Mon Sep 17 00:00:00 2001
+From: Attila Fidan <dev@print0.net>
+Date: Thu, 20 Mar 2025 11:45:41 +0000
+Subject: [PATCH 17/44] win32u: Return 0 from NtUserGetKeyNameText if there is
+ no translation.
+
+---
+ dlls/win32u/input.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/dlls/win32u/input.c b/dlls/win32u/input.c
+index 97e651a7ce5..8b90b78f019 100644
+--- a/dlls/win32u/input.c
++++ b/dlls/win32u/input.c
+@@ -1283,7 +1283,7 @@ INT WINAPI NtUserGetKeyNameText( LONG lparam, WCHAR *buffer, INT size )
+         HKL hkl = NtUserGetKeyboardLayout( 0 );
+         vkey = NtUserMapVirtualKeyEx( code & 0xff, MAPVK_VSC_TO_VK, hkl );
+         buffer[0] = NtUserMapVirtualKeyEx( vkey, MAPVK_VK_TO_CHAR, hkl );
+-        len = 1;
++        len = buffer[0] ? 1 : 0;
+     }
+     buffer[len] = 0;
+ 
+-- 
+2.49.0
+

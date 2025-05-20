@@ -1,0 +1,26 @@
+From 2dc1cdc040f8e199221d0b328f9d31339b8833ab Mon Sep 17 00:00:00 2001
+From: Etaash Mathamsetty
+ <45927311+Etaash-mathamsetty@users.noreply.github.com>
+Date: Thu, 15 May 2025 11:19:18 -0400
+Subject: [PATCH 4/9] formatting fix
+
+---
+ dlls/kernelbase/process.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/dlls/kernelbase/process.c b/dlls/kernelbase/process.c
+index f66afc59c81..991ab41674e 100644
+--- a/dlls/kernelbase/process.c
++++ b/dlls/kernelbase/process.c
+@@ -625,7 +625,7 @@ static const WCHAR *hack_append_command_line( const WCHAR *cmd )
+ 
+     /* Generally just workarounds for winewayland not supporting cross process rendering (yet) */
+     static const struct option wayland_options[] = {
+-        { L"launcher_epic.exe", L" --in-process-gpu"} /* ZZZ EGS */
++        {L"launcher_epic.exe", L" --in-process-gpu"}, /* ZZZ EGS */
+     };
+ 
+     unsigned int i;
+-- 
+2.49.0
+
