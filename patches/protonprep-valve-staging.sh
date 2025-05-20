@@ -362,12 +362,6 @@
     patch -Np1 < ../patches/wine-hotfixes/pending/wine-wayland/cursor_and_launchers/0008-winewayland-Use-unaccelerated-relative-motion.patch
     patch -Np1 < ../patches/wine-hotfixes/pending/wine-wayland/cursor_and_launchers/0009-winewayland-Use-discrete-event-when-possible.patch
 
-    echo "WINE: -CUSTOM- Fix angle conversions for FFB direction/phase"
-    patch -Np1 < ../patches/wine-hotfixes/pending/winebus.sys_fix_ffb_angle_conv.patch
-
-    echo "WINE: -CUSTOM- Clamp FFB effect report value to the field range."
-    patch -Np1 < ../patches/wine-hotfixes/pending/dinput_ffb_clamp_values.patch
-
     popd
 
 ### END PROTON-GE ADDITIONAL CUSTOM PATCHES ###
