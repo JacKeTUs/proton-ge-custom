@@ -295,6 +295,9 @@
     echo "WINE: -CUSTOM- add gstreamer surfaceless option"
     patch -Np1 < ../patches/proton/0001-use-surfaceless-for-GST.patch
 
+    echo "WINE: -CUSTOM- fixup for enable/disable hidraw"
+    patch -Np1 < ../patches/proton/1c2f561d80d20fa770c5fd170b9100c94293792d.patch
+
     echo "WINE: -CUSTOM- wine wayland"
     patch -Np1 < ../patches/wine-hotfixes/pending/wine-wayland/0001-winewayland-Enable-disable-the-zwp_text_input_v3-obj.patch
     patch -Np1 < ../patches/wine-hotfixes/pending/wine-wayland/0002-winewayland-Post-IME-update-for-committed-text.patch

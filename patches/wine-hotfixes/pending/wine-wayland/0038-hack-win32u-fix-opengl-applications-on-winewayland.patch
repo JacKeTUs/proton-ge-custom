@@ -1,28 +1,27 @@
-From dff0df89d20a7d3d991f6b1c5e7c1469630aad38 Mon Sep 17 00:00:00 2001
+From 6eb78145e30650262f6493fe0d80ef924a552db7 Mon Sep 17 00:00:00 2001
 From: Etaash Mathamsetty
  <45927311+Etaash-mathamsetty@users.noreply.github.com>
 Date: Sat, 10 May 2025 12:22:40 -0400
-Subject: [PATCH 38/44] hack: win32u: fix opengl applications on winewayland
+Subject: [PATCH] hack: win32u: fix opengl applications on winewayland
 
 ---
- dlls/win32u/window.c                   | 4 +++-
+ dlls/win32u/window.c                   | 3 ++-
  dlls/winewayland.drv/waylanddrv.h      | 1 +
  dlls/winewayland.drv/waylanddrv_main.c | 1 +
  dlls/winewayland.drv/window_surface.c  | 8 ++++++++
- 4 files changed, 13 insertions(+), 1 deletion(-)
+ 4 files changed, 12 insertions(+), 1 deletion(-)
 
 diff --git a/dlls/win32u/window.c b/dlls/win32u/window.c
-index f7cb2ea698e..fe19b722a69 100644
+index 82761d31753..65657fda6c3 100644
 --- a/dlls/win32u/window.c
 +++ b/dlls/win32u/window.c
-@@ -2038,7 +2038,9 @@ static struct window_surface *get_window_surface( HWND hwnd, UINT swp_flags, BOO
-     if (IsRectEmpty( surface_rect )) needs_surface = FALSE;
+@@ -2040,7 +2040,8 @@ static struct window_surface *get_window_surface( HWND hwnd, UINT swp_flags, BOO
      else if (create_layered || is_layered) needs_surface = TRUE;
  
--    if (is_opengl && !is_layered && !create_layered)
-+    /* This is an winex11 specific workaround.
-+        Detect wayland driver using pHasWindowManager  */
-+    if (is_opengl && !is_layered && !create_layered && !user_driver->pHasWindowManager("waylanddrv"))
+     if (is_opengl && !is_layered && !create_layered
+-        && !(!create_opaque && NtUserGetLayeredWindowAttributes( hwnd, NULL, NULL, &layered_flags ) && layered_flags & LWA_COLORKEY))
++        && !(!create_opaque && NtUserGetLayeredWindowAttributes( hwnd, NULL, NULL, &layered_flags ) && layered_flags & LWA_COLORKEY)
++        && !user_driver->pHasWindowManager("waylanddrv"))
      {
          if (new_surface) window_surface_release( new_surface );
          new_surface = NULL;
@@ -66,6 +65,3 @@ index 36bbb2d4f67..094294fc40b 100644
 +{
 +    return !strcmp("waylanddrv", name);
 +}
--- 
-2.49.0
-

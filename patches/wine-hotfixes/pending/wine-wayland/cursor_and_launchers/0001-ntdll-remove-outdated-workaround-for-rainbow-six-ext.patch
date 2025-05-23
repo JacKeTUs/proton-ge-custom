@@ -1,0 +1,32 @@
+From ae88d42125e92f2bc147ad982df03c55d7241f3f Mon Sep 17 00:00:00 2001
+From: Etaash Mathamsetty
+ <45927311+Etaash-mathamsetty@users.noreply.github.com>
+Date: Tue, 13 May 2025 16:29:55 -0400
+Subject: [PATCH 1/9] ntdll: remove outdated workaround for rainbow six
+ extraction
+
+---
+ dlls/ntdll/unix/loader.c | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/dlls/ntdll/unix/loader.c b/dlls/ntdll/unix/loader.c
+index 80b17e17b16..f673d96382e 100644
+--- a/dlls/ntdll/unix/loader.c
++++ b/dlls/ntdll/unix/loader.c
+@@ -2253,13 +2253,6 @@ static void hacks_init(void)
+         ERR("HACK: setting LIBGL_ALWAYS_SOFTWARE.\n");
+         setenv("LIBGL_ALWAYS_SOFTWARE", "1", 0);
+     }
+-
+-    if (sgi && !strcmp(sgi, "2379390"))
+-    {
+-        ERR("HACK: setting vk_x11_override_min_image_count, vk_x11_strict_image_count.\n");
+-        setenv("vk_x11_override_min_image_count", "2", 0);
+-        setenv("vk_x11_strict_image_count", "true", 0);
+-    }
+ }
+ 
+ /***********************************************************************
+-- 
+2.49.0
+
