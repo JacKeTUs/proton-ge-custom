@@ -1,0 +1,37 @@
+From 5714f7f9eedfee5a21b7daec4b843ac689df83de Mon Sep 17 00:00:00 2001
+From: Oleg Makarenko <oleg@makarenk.ooo>
+Date: Wed, 28 May 2025 01:45:51 +0300
+Subject: [PATCH] dinput: Disable autocenter by default. Allow to setup
+ autocentering with PROTON_ENABLE_AUTOCENTER variable. Set it to 1 if you want
+ autocenter enabled by default on your device.
+
+---
+ dlls/dinput/device.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/dlls/dinput/device.c b/dlls/dinput/device.c
+index 4166d18dd8c..5737bf4e53d 100644
+--- a/dlls/dinput/device.c
++++ b/dlls/dinput/device.c
+@@ -2146,7 +2146,20 @@ void dinput_device_init( struct dinput_device *device, const struct dinput_devic
+     device->caps.dwSize = sizeof(DIDEVCAPS);
+     device->caps.dwFlags = DIDC_ATTACHED | DIDC_EMULATED;
+     device->device_gain = 10000;
+-    device->autocenter = DIPROPAUTOCENTER_ON;
++    device->autocenter = DIPROPAUTOCENTER_OFF;
++
++    WCHAR value[16];
++    ULONG len = 0;
++    len = GetEnvironmentVariableW(L"PROTON_ENABLE_AUTOCENTER", value, 16);
++    if (len != 0)
++    {
++        value[len] = 0;
++        if (!wcscmp(value, L"1")) {
++            TRACE("Enabling autocenter due to PROTON_ENABLE_AUTOCENTER");
++            device->autocenter = DIPROPAUTOCENTER_ON;
++        }
++    }
++
+     device->force_feedback_state = DIGFFS_STOPPED | DIGFFS_EMPTY;
+     InitializeCriticalSectionEx( &device->crit, 0, RTL_CRITICAL_SECTION_FLAG_FORCE_DEBUG_INFO );
+     dinput_internal_addref( (device->dinput = dinput) );

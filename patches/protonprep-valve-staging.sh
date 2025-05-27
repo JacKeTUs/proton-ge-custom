@@ -364,6 +364,9 @@
 
     # Fix for joystick without axis
     patch -Np1 < ../patches/wine-hotfixes/pending/winebus-joystick-no-axis-detection.patch
+
+    # Fix for joysticks with autocenter: disable it by default
+    patch -Np1 < ../patches/wine-hotfixes/pending/dinput-joystick-disable-autocenter.patch
     popd
 
 ### END PROTON-GE ADDITIONAL CUSTOM PATCHES ###
