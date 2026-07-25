@@ -19,7 +19,7 @@ index 0000000..2603343
 @@ -0,0 +1,6 @@
 +MODULE = icuin.dll
 +
-+EXTRADLLFLAGS = -Wb,--data-only
++EXTRADLLFLAGS = -Wb,--data-only -Wb,--prefer-native
 +
 +SOURCES = \
 +	icuin.spec
@@ -453,7 +453,7 @@ index 0000000..302f15b
 @@ -0,0 +1,6 @@
 +MODULE = icuuc.dll
 +
-+EXTRADLLFLAGS = -Wb,--data-only
++EXTRADLLFLAGS = -Wb,--data-only -Wb,--prefer-native
 +
 +SOURCES = \
 +	icuuc.spec
