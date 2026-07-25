@@ -46,7 +46,7 @@ import protonfixes
 #and edit it if needed.
 import utilities
 
-CURRENT_PREFIX_VERSION="GE-Proton11-1"
+CURRENT_PREFIX_VERSION="GE-Proton11-2"
 
 PFX="Proton: "
 ld_path_var = "LD_LIBRARY_PATH"
@@ -1655,6 +1655,7 @@ def default_compat_config():
                 "312530", # Duck Game
                 "448230", # AsteroidsHD
                 "1072860", # Real Scary
+                "512490", # Zombie Estate 2
                 ]:
             ret.add("fnad3d11")
 
@@ -1680,7 +1681,10 @@ def default_compat_config():
             ret.add("nohardwarescheduling")
 
         if appid in [
-                    "4920",
+                    "4920", #Natural Selection 2
+                    "552440", #The Talos Principle VR
+                    "257510", #The Talos Principle
+
                 ]:
             ret.discard("gamedrive")
 
@@ -1720,6 +1724,14 @@ default_cpu_limit = {
     "115320"    :  "8",   # Prototype 2
     "65540"     :  "16",  # Gothic 1 Classic
     "1038250"   :  "P",   # DIRT 5
+}
+
+fex_application_profiles = {
+    "292030" : { # The Witcher 3: Wild Hunt
+        "setup*": {
+            "X87ReducedPrecision": "0"
+        }
+    }
 }
 
 class Session:
@@ -1938,6 +1950,12 @@ class Session:
 
         if "PROTON_LOG" in self.env:
             app_config["Config"]["SilentLog"] = "0" if self.log_enabled_for("fex", True) else "1"
+
+        if "SteamGameId" in os.environ and os.environ["SteamGameId"] in fex_application_profiles:
+            try:
+                app_config["AppOverrides"] = fex_application_profiles[os.environ["SteamGameId"]]
+            except (KeyError, ValueError):
+                pass
 
         return app_config
 
@@ -2204,8 +2222,17 @@ class Session:
                     "374320", #DARK SOULS III
                     "357190", #Ultimate Marvel vs Capcom 3
                     "730830", #Escape from Monkey Island
+                    "229480", #Dungeons & Dragons: Chronicles of Mystara
                     ]:
                 self.env["PROTON_LIMIT_RESOLUTIONS"] = "32"
+
+        if "PROTON_SPOOF_STEAMINPUT_VIDPID" not in self.env:
+            if os.environ.get("SteamGameId", 0) in [
+                    "939960", #Far Cry New Dawn
+                    "250900", #The Binding of Isaac: Rebirth
+                    "297860", #Split/Second
+                    ]:
+                self.env["PROTON_SPOOF_STEAMINPUT_VIDPID"] = "1"
 
         if "forcelgadd" in self.compat_config:
             self.env["WINE_LARGE_ADDRESS_AWARE"] = "1"
