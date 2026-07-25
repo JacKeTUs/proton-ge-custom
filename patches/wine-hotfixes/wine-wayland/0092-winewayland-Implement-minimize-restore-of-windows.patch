@@ -1,27 +1,29 @@
-From 5de54ca1fd746f0b6bb8b5466aea6ab34b99acc2 Mon Sep 17 00:00:00 2001
+From 1b8e8417ba413ba8486a9e7c9a88c93e1f612b01 Mon Sep 17 00:00:00 2001
 From: Etaash Mathamsetty
  <45927311+Etaash-mathamsetty@users.noreply.github.com>
 Date: Sun, 29 Mar 2026 03:07:24 -0500
-Subject: [PATCH 092/193] winewayland: Implement minimize & restore of windows.
+Subject: [PATCH 092/239] winewayland: Implement minimize & restore of windows.
 
 ---
- dlls/winewayland.drv/wayland_keyboard.c | 28 +++++++++++++++++++++++--
+ dlls/winewayland.drv/wayland_keyboard.c | 31 ++++++++++++++++++++++---
  dlls/winewayland.drv/waylanddrv.h       |  1 +
- dlls/winewayland.drv/window.c           | 27 ++++++++++++++++++++++--
- 3 files changed, 52 insertions(+), 4 deletions(-)
+ dlls/winewayland.drv/window.c           | 27 +++++++++++++++++++--
+ 3 files changed, 54 insertions(+), 5 deletions(-)
 
 diff --git a/dlls/winewayland.drv/wayland_keyboard.c b/dlls/winewayland.drv/wayland_keyboard.c
-index 648b7f9cc2f..ebe2a67ce98 100644
+index 648b7f9cc2f..c3b3368fb3f 100644
 --- a/dlls/winewayland.drv/wayland_keyboard.c
 +++ b/dlls/winewayland.drv/wayland_keyboard.c
-@@ -771,15 +771,21 @@ static void keyboard_handle_enter(void *private, struct wl_keyboard *wl_keyboard
+@@ -771,15 +771,22 @@ static void keyboard_handle_enter(void *private, struct wl_keyboard *wl_keyboard
           * foreground window when both the old and new foreground windows
           * are in the same non-current thread. */
          if (surface->window.managed)
+-            NtUserPostMessage(hwnd, WM_WAYLAND_SET_FOREGROUND, 0, 0);
 +        {
 +            if (surface->window.minimized)
 +                NtUserPostMessage(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
-             NtUserPostMessage(hwnd, WM_WAYLAND_SET_FOREGROUND, 0, 0);
++            else
++                NtUserPostMessage(hwnd, WM_WAYLAND_SET_FOREGROUND, 0, 0);
 +        }
      }
  
@@ -37,7 +39,7 @@ index 648b7f9cc2f..ebe2a67ce98 100644
      struct wayland_keyboard *keyboard = &process_wayland.keyboard;
      HWND hwnd;
  
-@@ -801,7 +807,25 @@ static void keyboard_handle_leave(void *data, struct wl_keyboard *wl_keyboard,
+@@ -801,7 +808,25 @@ static void keyboard_handle_leave(void *data, struct wl_keyboard *wl_keyboard,
       * and for any key repetition to stop. */
      release_all_keys(hwnd);
  

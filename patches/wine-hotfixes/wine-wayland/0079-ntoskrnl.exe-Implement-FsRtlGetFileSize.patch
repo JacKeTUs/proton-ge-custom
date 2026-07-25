@@ -1,7 +1,7 @@
-From 9fb5a9e932f06c34908ca039851da1961ad75693 Mon Sep 17 00:00:00 2001
+From 20f95827069ebae257924490affd854e3bd001f2 Mon Sep 17 00:00:00 2001
 From: Nello De Gregoris <bluechxindv@gmail.com>
 Date: Thu, 5 Mar 2026 17:14:39 +0100
-Subject: [PATCH 079/193] ntoskrnl.exe: Implement FsRtlGetFileSize().
+Subject: [PATCH 079/239] ntoskrnl.exe: Implement FsRtlGetFileSize().
 
 ---
  dlls/ntoskrnl.exe/ntoskrnl.c        | 25 +++++++++++++++++++++++++

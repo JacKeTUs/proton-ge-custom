@@ -1,8 +1,8 @@
-From 917e8fbe19c23661b677a86dc9273ed9ab7986f3 Mon Sep 17 00:00:00 2001
+From 8b03e18dce80fadd1eb877164ac0d6f6188978c6 Mon Sep 17 00:00:00 2001
 From: Etaash Mathamsetty
  <45927311+Etaash-mathamsetty@users.noreply.github.com>
 Date: Wed, 23 Jul 2025 12:46:14 -0400
-Subject: [PATCH 074/193] ntoskrnl: Add stub for
+Subject: [PATCH 074/239] ntoskrnl: Add stub for
  KeCapturePersistentThreadState.
 
 ---

@@ -1,8 +1,8 @@
-From 5b5dc8de8a5dde368ec3958be6ad21737244f0f7 Mon Sep 17 00:00:00 2001
+From ea3becc73307d4d8605795d33053819a9c21dc88 Mon Sep 17 00:00:00 2001
 From: Etaash Mathamsetty
  <45927311+Etaash-mathamsetty@users.noreply.github.com>
 Date: Tue, 22 Jul 2025 16:53:06 -0400
-Subject: [PATCH 071/193] ntoskrnl: Add stub for
+Subject: [PATCH 071/239] ntoskrnl: Add stub for
  KeRegisterBugCheckReasonCallback.
 
 ---

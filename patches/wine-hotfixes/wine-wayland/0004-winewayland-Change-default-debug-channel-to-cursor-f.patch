@@ -1,7 +1,7 @@
-From dde1da34d0e8ed955f99654cdd96a3bbbe653856 Mon Sep 17 00:00:00 2001
+From a4a5ac29ad56079862fbdccb67841fb24d76dfb7 Mon Sep 17 00:00:00 2001
 From: Etaash Mathamsetty <etaash.mathamsetty@gmail.com>
 Date: Mon, 20 Apr 2026 21:49:29 -0500
-Subject: [PATCH 004/193] winewayland: Change default debug channel to cursor
+Subject: [PATCH 004/239] winewayland: Change default debug channel to cursor
  for pointer.
 
 ---

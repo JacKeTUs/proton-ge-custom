@@ -1,7 +1,7 @@
-From 6cadb2f826225c1ca10fd0b87c203b99ea9bbb1c Mon Sep 17 00:00:00 2001
+From b0311eff549d2e5e86dae54e5276f8b19975f014 Mon Sep 17 00:00:00 2001
 From: Etaash Mathamsetty <etaash.mathamsetty@gmail.com>
 Date: Mon, 15 Jun 2026 21:39:23 -0400
-Subject: [PATCH 016/193] winewayland: Fix missing wayland_win_data_release.
+Subject: [PATCH 016/239] winewayland: Fix missing wayland_win_data_release.
 
 ---
  dlls/winewayland.drv/wayland_surface.c | 2 ++

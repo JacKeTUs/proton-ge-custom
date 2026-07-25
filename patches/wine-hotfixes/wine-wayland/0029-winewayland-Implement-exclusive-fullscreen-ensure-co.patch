@@ -1,8 +1,8 @@
-From e84b72b8e8f0a6c72570c97de2d7d288ddd4bc71 Mon Sep 17 00:00:00 2001
+From 6cd663b66fb1e4dfd314603c66e5f7595f75836c Mon Sep 17 00:00:00 2001
 From: Etaash Mathamsetty
  <45927311+Etaash-mathamsetty@users.noreply.github.com>
 Date: Wed, 1 Jul 2026 19:12:54 -0400
-Subject: [PATCH 029/193] winewayland: Implement exclusive fullscreen ensure
+Subject: [PATCH 029/239] winewayland: Implement exclusive fullscreen ensure
  contents.
 
 ---

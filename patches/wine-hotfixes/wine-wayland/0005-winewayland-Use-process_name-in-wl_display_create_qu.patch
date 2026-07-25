@@ -1,7 +1,7 @@
-From 778650e7bde0860a24e40a475833dc0251f1aa25 Mon Sep 17 00:00:00 2001
+From efee0ba2740c10ba9f2ffbbeabbe89159c2e5248 Mon Sep 17 00:00:00 2001
 From: Pan Hui <panhui@uniontech.com>
 Date: Thu, 18 Jun 2026 16:07:27 +0800
-Subject: [PATCH 005/193] winewayland: Use process_name in
+Subject: [PATCH 005/239] winewayland: Use process_name in
  wl_display_create_queue_with_name for debugging.
 
 ---
