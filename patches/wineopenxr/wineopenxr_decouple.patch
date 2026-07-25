@@ -511,8 +511,8 @@ index e6ee007d..ca738591 100644
 +    DWORD state;
 
 -    if ((status = RegOpenKeyExA( HKEY_CURRENT_USER, "Software\\Wine\\VR", 0, KEY_ALL_ACCESS, &vr_key )))
-+    static long init = 0;
-+    if (InterlockedCompareExchange(&init, 1, 0) != 0)
++    static void *init;
++    if (InterlockedCompareExchangePointer(&init, (void *)1, NULL))
 +        return TRUE;
 +
 +    if ((status = RegCreateKeyExW( HKEY_CURRENT_USER, L"Software\\Wine\\XR", 0, NULL,
