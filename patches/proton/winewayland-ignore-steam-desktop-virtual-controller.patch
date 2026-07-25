@@ -1,0 +1,113 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: GloriousEggroll <gloriouseggroll@gmail.com>
+Date: Fri, 24 Jul 2026 20:00:00 -0600
+Subject: [PATCH] setupapi: Hide disabled Steam Input virtual controllers.
+
+PROTON_NO_STEAMINPUT already prevents winebus from creating a device for
+Steam's 28de:11ff virtual controller. Existing prefixes may still contain
+device and interface records created while Steam Input was active, however.
+Those stale records remain visible through SetupAPI and Configuration
+Manager, allowing DirectInput and XInput to open a second controller path.
+
+Filter the exact Steam virtual controller VID/PID from both enumeration
+paths while PROTON_NO_STEAMINPUT=1. This leaves the registry intact so the
+device remains available when Steam Input is enabled again.
+---
+ dlls/cfgmgr32/cfgmgr32.c | 20 ++++++++++++++++++++
+ dlls/setupapi/devinst.c  | 18 +++++++++++++++++-
+ 2 files changed, 37 insertions(+), 1 deletion(-)
+
+diff --git a/dlls/cfgmgr32/cfgmgr32.c b/dlls/cfgmgr32/cfgmgr32.c
+index ce5747338cf..2beee310aa2 100644
+--- a/dlls/cfgmgr32/cfgmgr32.c
++++ b/dlls/cfgmgr32/cfgmgr32.c
+@@ -17,6 +17,8 @@
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+  */
+ 
++#include <stdlib.h>
++
+ #include "cfgmgr32_private.h"
+ #include "initguid.h"
+ #include "devpkey.h"
+@@ -224,9 +226,26 @@ static LSTATUS return_property_string( struct property *prop, const WCHAR *value
+     return return_property( prop, DEVPROP_TYPE_STRING, value, (wcslen( value ) + 1) * sizeof(WCHAR) );
+ }
+ 
++static BOOL is_disabled_steam_input_device( const WCHAR *path )
++{
++    static const WCHAR steam_input_id[] = L"VID_28DE&PID_11FF";
++    const char *env = getenv( "PROTON_NO_STEAMINPUT" );
++    const WCHAR *p;
++
++    if (!env || env[0] != '1' || env[1]) return FALSE;
++
++    for (p = path; *p; ++p)
++        if (!wcsnicmp( p, steam_input_id, ARRAY_SIZE(steam_input_id) - 1 ))
++            return TRUE;
++
++    return FALSE;
++}
++
+ static LSTATUS enum_objects_size( HKEY hkey, const void *object, const WCHAR *path, UINT path_len, void *context )
+ {
+     UINT *total = context;
++
++    if (is_disabled_steam_input_device( path )) return ERROR_SUCCESS;
+     *total += WideCharToMultiByte( CP_ACP, 0, path, path_len, NULL, 0, 0, 0 );
+     return ERROR_SUCCESS;
+ }
+@@ -241,6 +260,7 @@ static LSTATUS enum_objects_append( HKEY hkey, const void *object, const WCHAR *
+ {
+     struct enum_objects_append_params *params = context;
+ 
++    if (is_disabled_steam_input_device( path )) return ERROR_SUCCESS;
+     if (path_len > params->len) return ERROR_MORE_DATA;
+     memcpy( params->buffer, path, path_len * sizeof(WCHAR) );
+     params->buffer += path_len;
+diff --git a/dlls/setupapi/devinst.c b/dlls/setupapi/devinst.c
+index b860d72b16f..0c660798ed7 100644
+--- a/dlls/setupapi/devinst.c
++++ b/dlls/setupapi/devinst.c
+@@ -69,6 +69,21 @@ static const WCHAR Enum[] = L"System\\CurrentControlSet\\Enum";
+ 
+ #define SERVICE_CONTROL_REENUMERATE_ROOT_DEVICES 128
+ 
++static BOOL is_disabled_steam_input_device(const WCHAR *instance)
++{
++    static const WCHAR steam_input_id[] = L"VID_28DE&PID_11FF";
++    const char *env = getenv("PROTON_NO_STEAMINPUT");
++    const WCHAR *p;
++
++    if (!env || env[0] != '1' || env[1]) return FALSE;
++
++    for (p = instance; *p; ++p)
++        if (!wcsnicmp(p, steam_input_id, ARRAY_SIZE(steam_input_id) - 1))
++            return TRUE;
++
++    return FALSE;
++}
++
+ struct driver
+ {
+     DWORD rank;
+@@ -2013,7 +2028,8 @@ static void SETUPDI_EnumerateMatchingInterfaces(HDEVINFO DeviceInfoSet,
+                 if (!l && dataType == REG_SZ)
+                 {
+                     TRACE("found instance ID %s\n", debugstr_w(deviceInst));
+-                    if (!enumstr || !lstrcmpiW(enumstr, deviceInst))
++                    if (!is_disabled_steam_input_device(deviceInst) &&
++                            (!enumstr || !lstrcmpiW(enumstr, deviceInst)))
+                     {
+                         HKEY deviceKey;
+ 
+@@ -2252,6 +2268,7 @@ static void SETUPDI_EnumerateMatchingDeviceInstances(struct DeviceInfoSet *set,
+ 
+                             if (swprintf(id, ARRAY_SIZE(id), fmt, enumerator,
+                                         deviceName, deviceInstance) != -1 &&
++                                    !is_disabled_steam_input_device(id) &&
+                                     (!(flags & DIGCF_PRESENT) ||
+                                      is_device_instance_linked(subKey, interfacesKey, id)))
+                             {
+-- 
+2.55.0
